@@ -7,6 +7,10 @@ services:
       - prometheus_storage:/prometheus
     ports:
       - "9091:9090"
+    depends_on:
+      - "node_exporter"
+    networks:
+      - "common_network"
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -18,16 +22,28 @@ services:
       - ./grafana.ini:/etc/grafana/grafana.ini
     ports:
       - "3162:3000"
+    networks:
+      - "common_network"
   node_exporter:
-    image: quay.io/prometheus/node-exporter:latest
-    container_name: node_exporter
-    command:
-      - '--path.rootfs=/host'
-    network_mode: host
-    pid: host
-    restart: unless-stopped
+    privileged: true
+    image: prom/node-exporter
+    container_name: node-exporter
+    restart: always
+    ports:
+      - "9100:9100"
     volumes:
-      - '/:/host:ro,rslave'
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points"
+      - "^/(rootfs/)?(dev|etc|host|proc|run|sys|volume1)($$|/)"
+    networks:
+      - "common_network"
 volumes:
   grafana_storage: {}
   prometheus_storage: {}
+networks:
+  common_network: {}
