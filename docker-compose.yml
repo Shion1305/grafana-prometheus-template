@@ -20,6 +20,7 @@ services:
     volumes:
       - grafana_storage:/var/lib/grafana
       - ./grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     ports:
       - "3162:3000"
     networks:
